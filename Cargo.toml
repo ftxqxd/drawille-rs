@@ -1,0 +1,9 @@
+[package]
+
+name = "drawille"
+version = "0.1.0"
+authors = ["p1start"]
+
+[[lib]]
+
+name = "drawille"
