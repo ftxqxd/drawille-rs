@@ -5,13 +5,6 @@ use std::fmt::{Show, Formatter, FormatError};
 
 #[deriving(Show, Clone, PartialEq, Eq)]
 pub enum Color {
-    Bright(Hue),
-    Normal(Hue),
-    Dim(Hue),
-}
-
-#[deriving(Show, Clone, PartialEq, Eq)]
-pub enum Hue {
     Black,
     Red,
     Green,
@@ -29,25 +22,11 @@ impl Show for ColorPair {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
         // TODO: add Windows support if needed
         let ColorPair(first, second) = *self;
-        let finit = match first {
-            Bright(_) => "\x1b[0;1;",
-            Normal(_) => "\x1b[0;",
-            Dim(_) => "\x1b[0;2;",
-        };
-        let fend = match first {
-            Bright(hue) | Normal(hue) | Dim(hue) =>
-                hue as u32,
-        };
+        let finit = "\x1b[0;";
+        let fend = first as u32;
         let f = format!("{}4{}m", finit, fend);
-        let sinit = match second {
-            Bright(_) => "\x1b[1;",
-            Normal(_) => "\x1b[",
-            Dim(_) => "\x1b[2;",
-        };
-        let send = match second {
-            Bright(hue) | Normal(hue) | Dim(hue) =>
-                hue as u32,
-        };
+        let sinit = "\x1b[";
+        let send = second as u32;
         let s = format!("{}3{}m", sinit, send);
         try!(write!(fmt, "{}{}", f, s));
         Ok(())
@@ -73,7 +52,7 @@ enum Pixel {
 
 impl Default for Pixel {
     fn default() -> Pixel {
-        Char(ColorPair(Normal(Black), Normal(Black)), ' ')
+        Char(ColorPair(Black, Black), ' ')
     }
 }
 
@@ -137,11 +116,11 @@ impl Canvas {
         self.blocks.clear();
     }
 
-    pub fn text<S: Str>(&mut self, x: uint, y: uint, fg: Hue, bg: Hue, s: S) {
+    pub fn text<S: Str>(&mut self, x: uint, y: uint, fg: Color, bg: Color, s: S) {
         let (row, col) = (x, y / 2);
         for (i, c) in s.as_slice().chars().enumerate() {
             let block = self.blocks.find_or_insert((row + i, col), Default::default());
-            *block = Char(ColorPair(Normal(bg), Normal(fg)), c);
+            *block = Char(ColorPair(bg, fg), c);
         }
     }
 
@@ -149,7 +128,7 @@ impl Canvas {
         let (row, col) = (x, y / 2);
         let mut block = self.blocks.find_or_insert((row, col), Default::default());
         match block {
-            ref mut a @ &Char(_, _) => **a = Pair(ColorPair(Normal(Black), Normal(Black))),
+            ref mut a @ &Char(_, _) => **a = Pair(ColorPair(Black, Black)),
             _ => {},
         }
 
@@ -158,7 +137,7 @@ impl Canvas {
 
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), Default::default()).index_mut(y % 2) = Normal(Black);
+        *self.blocks.find_or_insert((row, col), Default::default()).index_mut(y % 2) = Black;
     }
 
     pub fn get(&self, x: uint, y: uint) -> Color {
@@ -166,7 +145,7 @@ impl Canvas {
         let col = self.blocks.find(&(row, col));
         
         match col {
-            None => Normal(Black),
+            None => Black,
             Some(c) => c[y % 2],
         }
     }
