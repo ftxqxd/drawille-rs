@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::cmp;
+use std::default::Default;
 use std::fmt::{Show, Formatter, FormatError};
 
 #[deriving(Show, Clone, PartialEq, Eq)]
@@ -48,7 +49,7 @@ impl Show for ColorPair {
                 hue as u32,
         };
         let s = format!("{}3{}m", sinit, send);
-        try!(write!(fmt, "{}{}▄", f, s));
+        try!(write!(fmt, "{}{}", f, s));
         Ok(())
     }
 }
@@ -64,10 +65,51 @@ impl Index<uint, Color> for ColorPair {
     }
 }
 
-impl ColorPair {
+#[deriving(Clone, PartialEq, Eq)]
+enum Pixel {
+    Char(ColorPair, char),
+    Pair(ColorPair),
+}
+
+impl Default for Pixel {
+    fn default() -> Pixel {
+        Char(ColorPair(Normal(Black), Normal(Black)), ' ')
+    }
+}
+
+impl Show for Pixel {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
+        match *self {
+            Char(cp, a) => try!(write!(f, "{}{}", cp, a)),
+            Pair(a) => try!(write!(f, "{}▄", a)),
+        }
+        Ok(())
+    }
+}
+
+impl Pixel {
     fn index_mut<'a>(&'a mut self, index: uint) -> &'a mut Color {
-        let ColorPair(ref mut c1, ref mut c2) = *self;
+        let cp = match *self {
+            Pair(ref mut cp) => cp,
+            _ => fail!("indexing a text pixel"),
+        };
+        let ColorPair(ref mut c1, ref mut c2) = *cp;
         match index {
+            0 => c1,
+            1 => c2,
+            _ => fail!("ColorPair index out of bounds"),
+        }
+    }
+}
+
+impl Index<uint, Color> for Pixel {
+    fn index(&self, index: &uint) -> Color {
+        let cp = match *self {
+            Pair(cp) => cp,
+            _ => fail!("indexing a text pixel"),
+        };
+        let ColorPair(c1, c2) = cp;
+        match *index {
             0 => c1,
             1 => c2,
             _ => fail!("ColorPair index out of bounds"),
@@ -77,7 +119,7 @@ impl ColorPair {
 
 #[deriving(Clone, Show, PartialEq, Eq)]
 pub struct Canvas {
-    blocks: HashMap<(uint, uint), ColorPair>,
+    blocks: HashMap<(uint, uint), Pixel>,
     width:  uint,
     height: uint,
 }
@@ -95,14 +137,28 @@ impl Canvas {
         self.blocks.clear();
     }
 
+    pub fn text<S: Str>(&mut self, x: uint, y: uint, fg: Hue, bg: Hue, s: S) {
+        let (row, col) = (x, y / 2);
+        for (i, c) in s.as_slice().chars().enumerate() {
+            let block = self.blocks.find_or_insert((row + i, col), Default::default());
+            *block = Char(ColorPair(Normal(bg), Normal(fg)), c);
+        }
+    }
+
     pub fn set(&mut self, x: uint, y: uint, c: Color) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), ColorPair(Normal(Black), Normal(Black))).index_mut(y % 2) = c;
+        let mut block = self.blocks.find_or_insert((row, col), Default::default());
+        match block {
+            ref mut a @ &Char(_, _) => **a = Pair(ColorPair(Normal(Black), Normal(Black))),
+            _ => {},
+        }
+
+        *block.index_mut(y % 2) = c;
     }
 
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), ColorPair(Normal(Black), Normal(Black))).index_mut(y % 2) = Normal(Black);
+        *self.blocks.find_or_insert((row, col), Default::default()).index_mut(y % 2) = Normal(Black);
     }
 
     pub fn get(&self, x: uint, y: uint) -> Color {
@@ -123,7 +179,7 @@ impl Canvas {
         for y in range(0, maxcol + 1) {
             let mut row = String::new();
             for x in range(0, maxrow + 1) {
-                let col = *self.blocks.find(&(x, y)).unwrap_or(&ColorPair(Normal(Black), Normal(Black)));
+                let col = *self.blocks.find(&(x, y)).unwrap_or(&Default::default());
                 row.push_str((format!("{}", col)).as_slice());
             }
             result.push(format!("{}\x1b[0m", row));
