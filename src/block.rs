@@ -1,19 +1,54 @@
 use std::collections::HashMap;
 use std::cmp;
 use std::fmt::{Show, Formatter, FormatError};
-use term::color::Color;
-use term::{Terminal, TerminfoTerminal};
+
+#[deriving(Show, Clone, PartialEq, Eq)]
+pub enum Color {
+    Bright(Hue),
+    Normal(Hue),
+    Dim(Hue),
+}
+
+#[deriving(Show, Clone, PartialEq, Eq)]
+pub enum Hue {
+    Black,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    White,
+}
 
 #[deriving(Clone, PartialEq, Eq)]
 struct ColorPair(Color, Color);
 
 impl Show for ColorPair {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
-        let ColorPair(bg, fg) = *self;
-        let mut tt: TerminfoTerminal<&mut Writer> = Terminal::new(f as &mut Writer).unwrap();
-        tt.fg(fg).unwrap();
-        tt.bg(bg).unwrap();
-        (write!(tt, "▄")).unwrap();
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatError> {
+        // TODO: add Windows support if needed
+        let ColorPair(first, second) = *self;
+        let finit = match first {
+            Bright(_) => "\x1b[0;1;",
+            Normal(_) => "\x1b[0;",
+            Dim(_) => "\x1b[0;2;",
+        };
+        let fend = match first {
+            Bright(hue) | Normal(hue) | Dim(hue) =>
+                hue as u32,
+        };
+        let f = format!("{}4{}m", finit, fend);
+        let sinit = match second {
+            Bright(_) => "\x1b[1;",
+            Normal(_) => "\x1b[",
+            Dim(_) => "\x1b[2;",
+        };
+        let send = match second {
+            Bright(hue) | Normal(hue) | Dim(hue) =>
+                hue as u32,
+        };
+        let s = format!("{}3{}m", sinit, send);
+        try!(write!(fmt, "{}{}▄", f, s));
         Ok(())
     }
 }
@@ -62,12 +97,12 @@ impl Canvas {
 
     pub fn set(&mut self, x: uint, y: uint, c: Color) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), ColorPair(0, 0)).index_mut(y % 2) = c;
+        *self.blocks.find_or_insert((row, col), ColorPair(Normal(Black), Normal(Black))).index_mut(y % 2) = c;
     }
 
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), ColorPair(0, 0)).index_mut(y % 2) = 0;
+        *self.blocks.find_or_insert((row, col), ColorPair(Normal(Black), Normal(Black))).index_mut(y % 2) = Normal(Black);
     }
 
     pub fn get(&self, x: uint, y: uint) -> Color {
@@ -75,7 +110,7 @@ impl Canvas {
         let col = self.blocks.find(&(row, col));
         
         match col {
-            None => 0,
+            None => Normal(Black),
             Some(c) => c[y % 2],
         }
     }
@@ -88,16 +123,16 @@ impl Canvas {
         for y in range(0, maxcol + 1) {
             let mut row = String::new();
             for x in range(0, maxrow + 1) {
-                let col = *self.blocks.find(&(x, y)).unwrap_or(&ColorPair(0, 0));
+                let col = *self.blocks.find(&(x, y)).unwrap_or(&ColorPair(Normal(Black), Normal(Black)));
                 row.push_str((format!("{}", col)).as_slice());
             }
-            result.push(row);
+            result.push(format!("{}\x1b[0m", row));
         }
         result
     }
 
     pub fn frame(&self) -> String {
-        self.rows().move_iter().collect::<Vec<String>>().connect("\n")
+        self.rows().connect("\n")
     }
 
     pub fn line_vec(&self, x1: uint, y1: uint, x2: uint, y2: uint) -> Vec<(uint, uint)> {
