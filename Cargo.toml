@@ -1,8 +1,8 @@
 [package]
 
 name = "drawille"
-version = "0.1.3"
-authors = ["p1start"]
+version = "0.1.4"
+authors = ["P1start"]
 
 [[lib]]
 
