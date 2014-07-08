@@ -33,17 +33,6 @@ impl Show for ColorPair {
     }
 }
 
-impl Index<uint, Color> for ColorPair {
-    fn index(&self, index: &uint) -> Color {
-        let ColorPair(c1, c2) = *self;
-        match *index {
-            0 => c1,
-            1 => c2,
-            _ => fail!("ColorPair index out of bounds"),
-        }
-    }
-}
-
 #[deriving(Clone, PartialEq, Eq)]
 enum Pixel {
     Char(ColorPair, char),
@@ -66,14 +55,14 @@ impl Show for Pixel {
     }
 }
 
-impl Pixel {
-    fn index_mut<'a>(&'a mut self, index: uint) -> &'a mut Color {
+impl IndexMut<uint, Color> for Pixel {
+    fn index_mut<'a>(&'a mut self, index: &uint) -> &'a mut Color {
         let cp = match *self {
             Pair(ref mut cp) => cp,
             _ => fail!("indexing a text pixel"),
         };
         let ColorPair(ref mut c1, ref mut c2) = *cp;
-        match index {
+        match *index {
             0 => c1,
             1 => c2,
             _ => fail!("ColorPair index out of bounds"),
@@ -81,14 +70,14 @@ impl Pixel {
     }
 }
 
-impl Index<uint, Color> for Pixel {
-    fn index(&self, index: &uint) -> Color {
+impl Pixel {
+    fn index(&self, index: uint) -> Color {
         let cp = match *self {
             Pair(cp) => cp,
             _ => fail!("indexing a text pixel"),
         };
         let ColorPair(c1, c2) = cp;
-        match *index {
+        match index {
             0 => c1,
             1 => c2,
             _ => fail!("ColorPair index out of bounds"),
@@ -132,12 +121,12 @@ impl Canvas {
             _ => {},
         }
 
-        *block.index_mut(y % 2) = c;
+        block[y % 2] = c;
     }
 
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x, y / 2);
-        *self.blocks.find_or_insert((row, col), Default::default()).index_mut(y % 2) = Black;
+        self.blocks.find_or_insert((row, col), Default::default())[y % 2] = Black;
     }
 
     pub fn get(&self, x: uint, y: uint) -> Color {
@@ -146,7 +135,7 @@ impl Canvas {
         
         match col {
             None => Black,
-            Some(c) => c[y % 2],
+            Some(c) => c.index(y % 2),
         }
     }
 
