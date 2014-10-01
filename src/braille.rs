@@ -94,7 +94,7 @@ impl Canvas {
 
     /// Draws the canvas to a `String` and returns it.
     pub fn frame(&self) -> String {
-        self.rows().move_iter().collect::<Vec<String>>().connect("\n")
+        self.rows().into_iter().collect::<Vec<String>>().connect("\n")
     }
 
     fn line_vec(&self, x1: uint, y1: uint, x2: uint, y2: uint) -> Vec<(uint, uint)> {
@@ -197,7 +197,7 @@ impl Turtle {
     pub fn forward(&mut self, dist: f32) {
         let x = self.x + self.rotation.to_radians().cos()*dist;
         let y = self.y + self.rotation.to_radians().sin()*dist;
-        self.move(x, y);
+        self.teleport(x, y);
     }
 
     /// Moves the `Turtle` backward by `dist` steps.
@@ -209,7 +209,7 @@ impl Turtle {
     ///
     /// Note that this draws a line between the old position and the new one if the `Turtle`’s
     /// brush is down.
-    pub fn move(&mut self, x: f32, y: f32) {
+    pub fn teleport(&mut self, x: f32, y: f32) {
         if self.brush {
             self.cvs.line(cmp::max(0, self.x.round() as int) as uint,
                           cmp::max(0, self.y.round() as int) as uint,
