@@ -4,6 +4,8 @@
 //! terminal, allowing for much smaller pixels but losing proper colour support.
 
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::num::{Float, FloatMath};
 use std::char;
 use std::cmp;
 
@@ -41,30 +43,39 @@ impl Canvas {
     /// Sets a pixel at the specified coordinates.
     pub fn set(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
-        *self.chars.find_or_insert((row, col), 0) |= PIXEL_MAP[y % 4][x % 2];
+        match self.chars.entry((row, col)) {
+            Entry::Occupied(mut e) => *e.get_mut() |= PIXEL_MAP[y % 4][x % 2],
+            Entry::Vacant(e) => { e.set(0); },
+        }
     }
 
     /// Deletes a pixel at the specified coordinates.
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
-        *self.chars.find_or_insert((row, col), 0) &= !PIXEL_MAP[y % 4][x % 2];
+        match self.chars.entry((row, col)) {
+            Entry::Occupied(mut e) => *e.get_mut() &= !PIXEL_MAP[y % 4][x % 2],
+            Entry::Vacant(e) => { e.set(0); },
+        }
     }
 
     /// Toggles a pixel at the specified coordinates.
     pub fn toggle(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
-        *self.chars.find_or_insert((row, col), 0) ^= PIXEL_MAP[y % 4][x % 2];
+        match self.chars.entry((row, col)) {
+            Entry::Occupied(mut e) => *e.get_mut() ^= PIXEL_MAP[y % 4][x % 2],
+            Entry::Vacant(e) => { e.set(0); },
+        }
     }
 
     /// Detects whether the pixel at the given coordinates is set.
     pub fn get(&self, x: uint, y: uint) -> bool {
         let dot_index = PIXEL_MAP[y % 4][x % 2];
         let (col, row) = (x / 2, y / 4);
-        let char = self.chars.find(&(row, col));
+        let char = self.chars.get(&(row, col));
         
         match char {
             None => false,
-            Some(c) => c & dot_index != 0,
+            Some(c) => *c & dot_index != 0,
         }
     }
 
@@ -80,8 +91,8 @@ impl Canvas {
         for y in range(0, maxcol + 1) {
             let mut row = String::new();
             for x in range(0, maxrow + 1) {
-                let char = *self.chars.find(&(x, y)).unwrap_or(&0);
-                row.push_char(if char == 0 {
+                let char = *self.chars.get(&(x, y)).unwrap_or(&0);
+                row.push(if char == 0 {
                     ' '
                 } else {
                     char::from_u32((0x2800 + char) as u32).unwrap()
