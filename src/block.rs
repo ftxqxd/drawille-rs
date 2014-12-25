@@ -4,7 +4,7 @@ use std::cmp;
 use std::default::Default;
 use std::fmt::{mod, Show, Formatter};
 
-#[deriving(Show, Clone, PartialEq, Eq)]
+#[deriving(Copy, Show, Clone, PartialEq, Eq)]
 pub enum Color {
     Black,
     Red,
@@ -16,7 +16,7 @@ pub enum Color {
     White,
 }
 
-#[deriving(Clone, PartialEq, Eq)]
+#[deriving(Copy, Clone, PartialEq, Eq)]
 struct ColorPair(Color, Color);
 
 impl Show for ColorPair {
@@ -34,7 +34,7 @@ impl Show for ColorPair {
     }
 }
 
-#[deriving(Clone, PartialEq, Eq)]
+#[deriving(Copy, Clone, PartialEq, Eq)]
 enum Pixel {
     Char(ColorPair, char),
     Pair(ColorPair),
