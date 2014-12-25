@@ -44,27 +44,30 @@ impl Canvas {
     pub fn set(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
-            Entry::Occupied(mut e) => *e.get_mut() |= PIXEL_MAP[y % 4][x % 2],
+            Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.set(0); },
         }
+        self.chars[(row, col)] |= PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Deletes a pixel at the specified coordinates.
     pub fn unset(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
-            Entry::Occupied(mut e) => *e.get_mut() &= !PIXEL_MAP[y % 4][x % 2],
+            Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.set(0); },
         }
+        self.chars[(row, col)] &= !PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Toggles a pixel at the specified coordinates.
     pub fn toggle(&mut self, x: uint, y: uint) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
-            Entry::Occupied(mut e) => *e.get_mut() ^= PIXEL_MAP[y % 4][x % 2],
+            Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.set(0); },
         }
+        self.chars[(row, col)] ^= PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Detects whether the pixel at the given coordinates is set.
