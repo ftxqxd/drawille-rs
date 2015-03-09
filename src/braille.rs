@@ -5,21 +5,21 @@
 
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::num::{Float, FloatMath};
+use std::num::Float;
 use std::char;
 use std::cmp;
 
-static PIXEL_MAP: [[int, ..2], ..4] = [[0x01, 0x08],
+static PIXEL_MAP: [[isize; 2]; 4] = [[0x01, 0x08],
                                        [0x02, 0x10],
                                        [0x04, 0x20],
                                        [0x40, 0x80]];
 
 /// A canvas object that can be used to draw to the terminal using Braille characters.
-#[deriving(Clone, Show, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Canvas {
-    chars: HashMap<(uint, uint), int>,
-    width:  uint,
-    height: uint,
+    chars: HashMap<(usize, usize), isize>,
+    width:  usize,
+    height: usize,
 }
 
 impl Canvas {
@@ -27,7 +27,7 @@ impl Canvas {
     ///
     /// Note that the `Canvas` can still draw outside the given dimensions (expanding the canvas)
     /// if a pixel is set outside the dimensions.
-    pub fn new(width: uint, height: uint) -> Canvas {
+    pub fn new(width: usize, height: usize) -> Canvas {
         Canvas {
             chars: HashMap::new(),
             width: width / 2,
@@ -41,41 +41,41 @@ impl Canvas {
     }
 
     /// Sets a pixel at the specified coordinates.
-    pub fn set(&mut self, x: uint, y: uint) {
+    pub fn set(&mut self, x: usize, y: usize) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
-            Entry::Vacant(e) => { e.set(0); },
+            Entry::Vacant(e) => { e.insert(0); },
         }
         self.chars[(row, col)] |= PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Deletes a pixel at the specified coordinates.
-    pub fn unset(&mut self, x: uint, y: uint) {
+    pub fn unset(&mut self, x: usize, y: usize) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
-            Entry::Vacant(e) => { e.set(0); },
+            Entry::Vacant(e) => { e.insert(0); },
         }
         self.chars[(row, col)] &= !PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Toggles a pixel at the specified coordinates.
-    pub fn toggle(&mut self, x: uint, y: uint) {
+    pub fn toggle(&mut self, x: usize, y: usize) {
         let (row, col) = (x / 2, y / 4);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
-            Entry::Vacant(e) => { e.set(0); },
+            Entry::Vacant(e) => { e.insert(0); },
         }
         self.chars[(row, col)] ^= PIXEL_MAP[y % 4][x % 2];
     }
 
     /// Detects whether the pixel at the given coordinates is set.
-    pub fn get(&self, x: uint, y: uint) -> bool {
+    pub fn get(&self, x: usize, y: usize) -> bool {
         let dot_index = PIXEL_MAP[y % 4][x % 2];
         let (col, row) = (x / 2, y / 4);
         let char = self.chars.get(&(row, col));
-        
+
         match char {
             None => false,
             Some(c) => *c & dot_index != 0,
@@ -91,9 +91,9 @@ impl Canvas {
         let maxcol = cmp::max(self.height, self.chars.keys().map(|&(_, y)| y).max().unwrap_or(0));
 
         let mut result = vec![];
-        for y in range(0, maxcol + 1) {
+        for y in (0..maxcol + 1) {
             let mut row = String::new();
-            for x in range(0, maxrow + 1) {
+            for x in (0..maxrow + 1) {
                 let char = *self.chars.get(&(x, y)).unwrap_or(&0);
                 row.push(if char == 0 {
                     ' '
@@ -111,7 +111,7 @@ impl Canvas {
         self.rows().into_iter().collect::<Vec<String>>().connect("\n")
     }
 
-    fn line_vec(&self, x1: uint, y1: uint, x2: uint, y2: uint) -> Vec<(uint, uint)> {
+    fn line_vec(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Vec<(usize, usize)> {
         let xdiff = cmp::max(x1, x2) - cmp::min(x1, x2);
         let ydiff = cmp::max(y1, y2) - cmp::min(y1, y2);
         let xdir = if x1 <= x2 { 1 } else { -1 };
@@ -120,7 +120,7 @@ impl Canvas {
         let r = cmp::max(xdiff, ydiff);
 
         let mut result = vec![];
-        for i in range(0, r + 1) {
+        for i in (0..r + 1) {
             let mut x = x1;
             let mut y = y1;
 
@@ -137,7 +137,7 @@ impl Canvas {
     }
 
     /// Draws a line from `(x1, y1)` to `(x2, y2)` onto the `Canvas`.
-    pub fn line(&mut self, x1: uint, y1: uint, x2: uint, y2: uint) {
+    pub fn line(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         for &(x, y) in self.line_vec(x1, y1, x2, y2).iter() {
             self.set(x, y);
         }
@@ -181,13 +181,13 @@ impl Turtle {
     }
 
     /// Sets the width of a `Turtle`’s `Canvas`, and return it for use again.
-    pub fn width(mut self, width: uint) -> Turtle {
+    pub fn width(mut self, width: usize) -> Turtle {
         self.cvs.width = width;
         self
     }
 
     /// Sets the height of a `Turtle`’s `Canvas`, and return it for use again.
-    pub fn height(mut self, height: uint) -> Turtle {
+    pub fn height(mut self, height: usize) -> Turtle {
         self.cvs.height = height;
         self
     }
@@ -225,10 +225,10 @@ impl Turtle {
     /// brush is down.
     pub fn teleport(&mut self, x: f32, y: f32) {
         if self.brush {
-            self.cvs.line(cmp::max(0, self.x.round() as int) as uint,
-                          cmp::max(0, self.y.round() as int) as uint,
-                          cmp::max(0, x.round() as int) as uint,
-                          cmp::max(0, y.round() as int) as uint);
+            self.cvs.line(cmp::max(0, self.x.round() as isize) as usize,
+                          cmp::max(0, self.y.round() as isize) as usize,
+                          cmp::max(0, x.round() as isize) as usize,
+                          cmp::max(0, y.round() as isize) as usize);
         }
 
         self.x = x;
