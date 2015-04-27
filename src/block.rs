@@ -60,13 +60,13 @@ impl fmt::Display for Pixel {
 impl Index<usize> for Pixel {
     type Output = Color;
 
-    fn index<'a>(&'a self, index: &usize) -> &'a Color {
+    fn index<'a>(&'a self, index: usize) -> &'a Color {
         let cp = match *self {
             Pixel::Pair(ref cp) => cp,
             _ => panic!("indexing a text pixel"),
         };
         let ColorPair(ref c1, ref c2) = *cp;
-        match *index {
+        match index {
             0 => c1,
             1 => c2,
             _ => panic!("ColorPair index out of bounds"),
@@ -75,13 +75,13 @@ impl Index<usize> for Pixel {
 }
 
 impl IndexMut<usize> for Pixel {
-    fn index_mut<'a>(&'a mut self, index: &usize) -> &'a mut Color {
+    fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut Color {
         let cp = match *self {
             Pixel::Pair(ref mut cp) => cp,
             _ => panic!("indexing a text pixel"),
         };
         let ColorPair(ref mut c1, ref mut c2) = *cp;
-        match *index {
+        match index {
             0 => c1,
             1 => c2,
             _ => panic!("ColorPair index out of bounds"),
@@ -124,9 +124,9 @@ impl Canvas {
         self.blocks.clear();
     }
 
-    pub fn text<S: Str>(&mut self, x: usize, y: usize, fg: Color, bg: Color, s: S) {
+    pub fn text<S: AsRef<str>>(&mut self, x: usize, y: usize, fg: Color, bg: Color, s: S) {
         let (row, col) = (x, y / 2);
-        for (i, c) in s.as_slice().chars().enumerate() {
+        for (i, c) in s.as_ref().chars().enumerate() {
             match self.blocks.entry((row + i, col)) {
                 Entry::Occupied(e) => *e.into_mut() = Pixel::Char(ColorPair(bg, fg), c),
                 Entry::Vacant(e) => { e.insert(Pixel::Char(ColorPair(bg, fg), c)); },
@@ -176,7 +176,7 @@ impl Canvas {
             let mut row = String::new();
             for x in (0..maxrow + 1) {
                 let col = *self.blocks.get(&(x, y)).unwrap_or(&Default::default());
-                row.push_str((format!("{}", col)).as_slice());
+                row.push_str(&format!("{}", col));
             }
             result.push(format!("{}\x1b[0m", row));
         }

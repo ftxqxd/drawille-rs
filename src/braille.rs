@@ -5,7 +5,6 @@
 
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::num::Float;
 use std::char;
 use std::cmp;
 
@@ -47,7 +46,7 @@ impl Canvas {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
         }
-        self.chars[(row, col)] |= PIXEL_MAP[y % 4][x % 2];
+        self.chars.get_mut(&(row, col)).map(|a| *a |= PIXEL_MAP[y % 4][x % 2]);
     }
 
     /// Deletes a pixel at the specified coordinates.
@@ -57,7 +56,7 @@ impl Canvas {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
         }
-        self.chars[(row, col)] &= !PIXEL_MAP[y % 4][x % 2];
+        self.chars.get_mut(&(row, col)).map(|a| *a &= !PIXEL_MAP[y % 4][x % 2]);
     }
 
     /// Toggles a pixel at the specified coordinates.
@@ -67,7 +66,7 @@ impl Canvas {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
         }
-        self.chars[(row, col)] ^= PIXEL_MAP[y % 4][x % 2];
+        self.chars.get_mut(&(row, col)).map(|a| *a ^= PIXEL_MAP[y % 4][x % 2]);
     }
 
     /// Detects whether the pixel at the given coordinates is set.
