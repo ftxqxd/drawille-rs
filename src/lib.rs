@@ -1,6 +1,5 @@
 #![crate_type = "lib"]
 #![crate_name = "drawille"]
-#![feature(std_misc)]
 
 //! drawille—a terminal graphics library for Rust. The `braille` module is based on the Python
 //! library [drawille](https://github.com/asciimoo/drawille).

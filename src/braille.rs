@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::char;
 use std::cmp;
+use std::f32;
 
 static PIXEL_MAP: [[isize; 2]; 4] = [[0x01, 0x08],
                                        [0x02, 0x10],
@@ -120,17 +121,17 @@ impl Canvas {
 
         let mut result = vec![];
         for i in (0..r + 1) {
-            let mut x = x1;
-            let mut y = y1;
+            let mut x = x1 as isize;
+            let mut y = y1 as isize;
 
             if ydiff != 0 {
-                y += (i * ydiff) / r * ydir;
+                y += ((i * ydiff) / r) as isize * ydir;
             }
             if xdiff != 0 {
-                x += (i * xdiff) / r * xdir;
+                x += ((i * xdiff) / r) as isize * xdir;
             }
 
-            result.push((x, y));
+            result.push((x as usize, y as usize));
         }
         result
     }
@@ -208,8 +209,8 @@ impl Turtle {
 
     /// Moves the `Turtle` forward by `dist` steps.
     pub fn forward(&mut self, dist: f32) {
-        let x = self.x + self.rotation.to_radians().cos()*dist;
-        let y = self.y + self.rotation.to_radians().sin()*dist;
+        let x = self.x + degrees_to_radians(self.rotation).cos()*dist;
+        let y = self.y + degrees_to_radians(self.rotation).sin()*dist;
         self.teleport(x, y);
     }
 
@@ -248,4 +249,8 @@ impl Turtle {
     pub fn frame(&self) -> String {
         self.cvs.frame()
     }
+}
+
+fn degrees_to_radians(deg: f32) -> f32 {
+    deg * (f32::consts::PI / 180.0f32)
 }

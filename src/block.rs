@@ -197,17 +197,17 @@ impl Canvas {
 
         let mut result = vec![];
         for i in (0..r + 1) {
-            let mut x = x1;
-            let mut y = y1;
+            let mut x = x1 as isize;
+            let mut y = y1 as isize;
 
             if ydiff != 0 {
-                y += (i * ydiff) / r * ydir;
+                y += ((i * ydiff) / r) as isize * ydir;
             }
             if xdiff != 0 {
-                x += (i * xdiff) / r * xdir;
+                x += ((i * xdiff) / r) as isize * xdir;
             }
 
-            result.push((x, y));
+            result.push((x as usize, y as usize));
         }
         result
     }
