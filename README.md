@@ -1,8 +1,8 @@
 drawille-rs
 ===========
 
-A terminal graphics library for Rust with multiple methods of drawing more
-advanced to the terminal by utilising Unicode characters.
+A terminal graphics library for Rust that enables the use of braille characters
+to draw shapes.
 
 This is a port of [asciimoo/drawille](https://github.com/asciimoo/drawille) to Rust.
 
