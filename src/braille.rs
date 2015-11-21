@@ -91,9 +91,9 @@ impl Canvas {
         let maxcol = cmp::max(self.height, self.chars.keys().map(|&(_, y)| y).max().unwrap_or(0));
 
         let mut result = vec![];
-        for y in (0..maxcol + 1) {
+        for y in 0..maxcol + 1 {
             let mut row = String::new();
-            for x in (0..maxrow + 1) {
+            for x in 0..maxrow + 1 {
                 let char = *self.chars.get(&(x, y)).unwrap_or(&0);
                 row.push(if char == 0 {
                     ' '
@@ -108,7 +108,7 @@ impl Canvas {
 
     /// Draws the canvas to a `String` and returns it.
     pub fn frame(&self) -> String {
-        self.rows().into_iter().collect::<Vec<String>>().connect("\n")
+        self.rows().into_iter().collect::<Vec<String>>().join("\n")
     }
 
     fn line_vec(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Vec<(usize, usize)> {
@@ -120,7 +120,7 @@ impl Canvas {
         let r = cmp::max(xdiff, ydiff);
 
         let mut result = vec![];
-        for i in (0..r + 1) {
+        for i in 0..r + 1 {
             let mut x = x1 as isize;
             let mut y = y1 as isize;
 

@@ -172,9 +172,9 @@ impl Canvas {
         let maxcol = cmp::max(self.height, self.blocks.keys().map(|&(_, y)| y).max().unwrap_or(0));
 
         let mut result = vec![];
-        for y in (0..maxcol + 1) {
+        for y in 0..maxcol + 1 {
             let mut row = String::new();
-            for x in (0..maxrow + 1) {
+            for x in 0..maxrow + 1 {
                 let col = *self.blocks.get(&(x, y)).unwrap_or(&Default::default());
                 row.push_str(&format!("{}", col));
             }
@@ -184,7 +184,7 @@ impl Canvas {
     }
 
     pub fn frame(&self) -> String {
-        self.rows().connect("\n")
+        self.rows().join("\n")
     }
 
     pub fn line_vec(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Vec<(usize, usize)> {
@@ -196,7 +196,7 @@ impl Canvas {
         let r = cmp::max(xdiff, ydiff);
 
         let mut result = vec![];
-        for i in (0..r + 1) {
+        for i in 0..r + 1 {
             let mut x = x1 as isize;
             let mut y = y1 as isize;
 
