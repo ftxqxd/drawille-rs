@@ -1,6 +1,6 @@
 [package]
 name = "drawille"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["P1start"]
 description = "Draw to the terminal using braille characters"
 license = "MIT"
