@@ -3,7 +3,7 @@ name = "drawille"
 version = "0.2.2"
 authors = ["P1start"]
 description = "Draw to the terminal using braille characters"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/P1start/drawille-rs"
 homepage = "https://github.com/P1start/drawille-rs"
 
