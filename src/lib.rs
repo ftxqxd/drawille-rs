@@ -28,7 +28,7 @@ use std::char;
 use std::cmp;
 use std::f32;
 
-static PIXEL_MAP: [[u32; 2]; 4] = [[0x01, 0x08],
+static PIXEL_MAP: [[u8; 2]; 4] = [[0x01, 0x08],
                                    [0x02, 0x10],
                                    [0x04, 0x20],
                                    [0x40, 0x80]];
@@ -36,9 +36,9 @@ static PIXEL_MAP: [[u32; 2]; 4] = [[0x01, 0x08],
 /// A canvas object that can be used to draw to the terminal using Braille characters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Canvas {
-    chars: HashMap<(u32, u32), u32>,
-    width: u32,
-    height: u32,
+    chars: HashMap<(u16, u16), u8>,
+    width: u16,
+    height: u16,
 }
 
 impl Canvas {
@@ -49,8 +49,8 @@ impl Canvas {
     pub fn new(width: u32, height: u32) -> Canvas {
         Canvas {
             chars: HashMap::new(),
-            width: width / 2,
-            height: height / 4,
+            width: (width / 2) as u16,
+            height: (height / 4) as u16,
         }
     }
 
@@ -61,7 +61,7 @@ impl Canvas {
 
     /// Sets a pixel at the specified coordinates.
     pub fn set(&mut self, x: u32, y: u32) {
-        let (row, col) = (x / 2, y / 4);
+        let (row, col) = ((x / 2) as u16, (y / 4) as u16);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
@@ -71,7 +71,7 @@ impl Canvas {
 
     /// Deletes a pixel at the specified coordinates.
     pub fn unset(&mut self, x: u32, y: u32) {
-        let (row, col) = (x / 2, y / 4);
+        let (row, col) = ((x / 2) as u16, (y / 4) as u16);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
@@ -81,7 +81,7 @@ impl Canvas {
 
     /// Toggles a pixel at the specified coordinates.
     pub fn toggle(&mut self, x: u32, y: u32) {
-        let (row, col) = (x / 2, y / 4);
+        let (row, col) = ((x / 2) as u16, (y / 4) as u16);
         match self.chars.entry((row, col)) {
             Entry::Occupied(_) => {},
             Entry::Vacant(e) => { e.insert(0); },
@@ -92,7 +92,7 @@ impl Canvas {
     /// Detects whether the pixel at the given coordinates is set.
     pub fn get(&self, x: u32, y: u32) -> bool {
         let dot_index = PIXEL_MAP[y as usize % 4][x as usize % 2];
-        let (col, row) = (x / 2, y / 4);
+        let (row, col) = ((x / 2) as u16, (y / 4) as u16);
         let char = self.chars.get(&(row, col));
 
         match char {
@@ -113,7 +113,7 @@ impl Canvas {
         for y in 0..maxcol + 1 {
             let mut row = String::new();
             for x in 0..maxrow + 1 {
-                let char = *self.chars.get(&(x, y)).unwrap_or(&0);
+                let char = self.chars.get(&(x, y)).cloned().unwrap_or(0) as u32;
                 row.push(if char == 0 {
                     ' '
                 } else {
@@ -201,13 +201,13 @@ impl Turtle {
 
     /// Sets the width of a `Turtle`’s `Canvas`, and return it for use again.
     pub fn width(mut self, width: u32) -> Turtle {
-        self.cvs.width = width;
+        self.cvs.width = width as u16;
         self
     }
 
     /// Sets the height of a `Turtle`’s `Canvas`, and return it for use again.
     pub fn height(mut self, height: u32) -> Turtle {
-        self.cvs.height = height;
+        self.cvs.height = height as u16;
         self
     }
 
