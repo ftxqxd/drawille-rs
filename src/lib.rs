@@ -37,7 +37,7 @@ static PIXEL_MAP: [[u8; 2]; 4] = [[0x01, 0x08],
 /// A canvas object that can be used to draw to the terminal using Braille characters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Canvas {
-    chars: FnvHashMap<(u16, u16), u8>,
+    chars: FnvHashMap<(u16, u16), (u8, char)>,
     width: u16,
     height: u16,
 }
@@ -63,30 +63,50 @@ impl Canvas {
     /// Sets a pixel at the specified coordinates.
     pub fn set(&mut self, x: u32, y: u32) {
         let (row, col) = ((x / 2) as u16, (y / 4) as u16);
-        let a = self.chars.entry((row, col)).or_insert(0);
-        *a |= PIXEL_MAP[y as usize % 4][x as usize % 2];
+        let a = self.chars.entry((row, col)).or_insert((0,' '));
+        a.0 |= PIXEL_MAP[y as usize % 4][x as usize % 2];
+        a.1 = ' ';
+    }
+
+    /// Sets a letter at the specified coordinates.
+    pub fn set_char(&mut self, x: u32, y: u32, c: char) {
+        let (row, col) = ((x / 2) as u16, (y / 4) as u16);
+        let a = self.chars.entry((row, col)).or_insert((0,' '));
+        a.0 = 0;
+        a.1 = c;
+    }
+
+    /// Draws text at the specified coordinates (top-left of the text) up to max_width length
+    pub fn text(&mut self, x: u32, y: u32, max_width: u32, text: &str) {
+        for (i, c) in text.chars().enumerate() {
+            let w = i as u32 * 2;
+            if w > max_width {
+                return;
+            }
+            self.set_char(x + w, y, c);
+        }
     }
 
     /// Deletes a pixel at the specified coordinates.
     pub fn unset(&mut self, x: u32, y: u32) {
         let (row, col) = ((x / 2) as u16, (y / 4) as u16);
-        let a = self.chars.entry((row, col)).or_insert(0);
-        *a &= !PIXEL_MAP[y as usize % 4][x as usize % 2];
+        let a = self.chars.entry((row, col)).or_insert((0,' '));
+        a.0 &= !PIXEL_MAP[y as usize % 4][x as usize % 2];
     }
 
     /// Toggles a pixel at the specified coordinates.
     pub fn toggle(&mut self, x: u32, y: u32) {
         let (row, col) = ((x / 2) as u16, (y / 4) as u16);
-        let a = self.chars.entry((row, col)).or_insert(0);
-        *a ^= PIXEL_MAP[y as usize % 4][x as usize % 2];
+        let a = self.chars.entry((row, col)).or_insert((0,' '));
+        a.0 ^= PIXEL_MAP[y as usize % 4][x as usize % 2];
     }
 
     /// Detects whether the pixel at the given coordinates is set.
     pub fn get(&self, x: u32, y: u32) -> bool {
         let (row, col) = ((x / 2) as u16, (y / 4) as u16);
-        self.chars.get(&(row, col)).map_or(false, |c| {
+        self.chars.get(&(row, col)).map_or(false, |a| {
             let dot_index = PIXEL_MAP[y as usize % 4][x as usize % 2];
-            *c & dot_index != 0
+            a.0 & dot_index != 0
         })
     }
 
@@ -106,11 +126,11 @@ impl Canvas {
         for y in 0..=maxcol {
             let mut row = String::with_capacity(maxrow as usize + 1);
             for x in 0..=maxrow {
-                let char = self.chars.get(&(x, y)).cloned().unwrap_or(0) as u32;
-                row.push(if char == 0 {
-                    ' '
+                let cell = self.chars.get(&(x, y)).cloned().unwrap_or((0,' '));
+                row.push(if cell.0 == 0 {
+                    cell.1
                 } else {
-                    char::from_u32(0x2800 + char).unwrap()
+                    char::from_u32(0x2800 + cell.0 as u32).unwrap()
                 })
             }
             result.push(row);
