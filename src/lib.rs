@@ -22,11 +22,13 @@
 //! }
 //! ```
 
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::char;
 use std::cmp;
 use std::f32;
+
+extern crate fnv;
+use fnv::FnvHashMap;
 
 static PIXEL_MAP: [[u8; 2]; 4] = [[0x01, 0x08],
                                    [0x02, 0x10],
@@ -36,7 +38,7 @@ static PIXEL_MAP: [[u8; 2]; 4] = [[0x01, 0x08],
 /// A canvas object that can be used to draw to the terminal using Braille characters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Canvas {
-    chars: HashMap<(u16, u16), u8>,
+    chars: FnvHashMap<(u16, u16), u8>,
     width: u16,
     height: u16,
 }
@@ -48,7 +50,7 @@ impl Canvas {
     /// if a pixel is set outside the dimensions.
     pub fn new(width: u32, height: u32) -> Canvas {
         Canvas {
-            chars: HashMap::new(),
+            chars: FnvHashMap::default(),
             width: (width / 2) as u16,
             height: (height / 4) as u16,
         }
