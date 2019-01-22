@@ -9,3 +9,6 @@ homepage = "https://github.com/P1start/drawille-rs"
 
 [lib]
 name = "drawille"
+
+[dependencies]
+fnv = "1.0.6"
