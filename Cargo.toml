@@ -12,3 +12,4 @@ name = "drawille"
 
 [dependencies]
 fnv = "1.0.6"
+colored = "2.0.0"
