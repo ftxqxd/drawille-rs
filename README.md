@@ -9,11 +9,11 @@ This is a port of [asciimoo/drawille](https://github.com/asciimoo/drawille) to R
 Usage
 -----
 
-Just add P1start/drawille-rs to your Cargo.toml:
+Just add ftxqxd/drawille-rs to your Cargo.toml:
 
 ```toml
-[dependencies.drawille]
-git = "git://github.com/P1start/drawille-rs"
+[dependencies]
+drawille = "0.3.0"
 ```
 
 ## License
