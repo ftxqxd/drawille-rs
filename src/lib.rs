@@ -55,6 +55,21 @@ impl Canvas {
         }
     }
 
+    /// Get a reference to the canvas's chars.
+    pub fn chars(&self) -> &FnvHashMap<(u16, u16), (u8, char, bool, PixelColor)> {
+        &self.chars
+    }
+
+    /// Get a reference to the canvas's width.
+    pub fn width(&self) -> u16 {
+        self.width
+    }
+
+    /// Get a reference to the canvas's height.
+    pub fn height(&self) -> u16 {
+        self.height
+    }
+
     /// Clears the canvas.
     pub fn clear(&mut self) {
         self.chars.clear();
@@ -74,7 +89,7 @@ impl Canvas {
     }
 
     /// Sets a pixel at the specified coordinates.
-    /// specifying the color of the braille char 
+    /// specifying the color of the braille char
     pub fn set_colored(&mut self, x: u32, y: u32, color: PixelColor) {
         let (row, col) = ((x / 2) as u16, (y / 4) as u16);
         let a = self
@@ -256,8 +271,8 @@ impl Turtle {
     pub fn new(x: f32, y: f32) -> Turtle {
         Turtle {
             cvs: Canvas::new(0, 0),
-            x: x,
-            y: y,
+            x,
+            y,
             brush: true,
             use_color: false,
             brush_color: PixelColor::White,
@@ -270,9 +285,9 @@ impl Turtle {
     /// The turtle starts with its brush down, facing right.
     pub fn from_canvas(x: f32, y: f32, cvs: Canvas) -> Turtle {
         Turtle {
-            cvs: cvs,
-            x: x,
-            y: y,
+            cvs,
+            x,
+            y,
             brush: true,
             use_color: false,
             brush_color: PixelColor::White,
