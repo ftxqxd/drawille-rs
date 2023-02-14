@@ -145,8 +145,8 @@ impl Canvas {
     /// Note that each row is actually four pixels high due to the fact that a single Braille
     /// character spans two by four pixels.
     pub fn rows(&self) -> Vec<String> {
-        let mut maxrow = self.width;
-        let mut maxcol = self.height;
+        let mut maxrow = if self.width > 0 { self.width - 1 } else { 0 };
+        let mut maxcol = if self.height > 0 { self.height - 1 } else { 0 };
         for &(x, y) in self.chars.keys() {
             if x > maxrow {
                 maxrow = x;
